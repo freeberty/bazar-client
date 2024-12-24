@@ -1,0 +1,67 @@
+---
+import Root from '../../layouts/root.astro';
+import { BidHistory } from '../../components/client/bid-history';
+import { BidControls } from '../../components/client/bid-controls';
+import { DateTime } from 'luxon';
+import { getAuctions, initializeRelay } from '../../stores/server/auctions';
+
+export async function getStaticPaths() {
+  try {
+    await initializeRelay();
+    const auctions = getAuctions();
+    
+    if (!auctions || auctions.length === 0) {
+      return []; // Return empty array if no auctions
+    }
+
+    return auctions.map(event => ({
+      params: { id: event.id },
+      props: { auctionEvent: event }
+    }));
+  } catch (error) {
+    console.error('Failed to get auctions:', error);
+    return []; // Return empty array on error
+  }
+}
+
+// Get data from props
+const { auctionEvent } = Astro.props;
+
+// Add error handling for parsing
+let auction;
+try {
+  auction = JSON.parse(auctionEvent.content);
+} catch (error) {
+  console.log('error', error);
+  return Astro.redirect('/404');
+}
+---
+
+<Root title={auction.title}>
+  <div class="page-wrapper">
+    <div class="auction-page">
+      <div class="auction-details">
+        <h1>{auction.title}</h1>
+        <p class="description">{auction.description}</p>
+        
+        <div class="auction-info">
+          <p>Minimum bid step: {auction.bidStepSats} sats</p>
+          <p>Ends: {DateTime.fromSeconds(auction.finishTimestamp).toLocaleString(DateTime.DATETIME_FULL)}</p>
+        </div>
+
+        <div class="bids-section">
+          <h2>Bid History</h2>
+          <BidHistory client:idle auctionId={auctionEvent.id} />
+        </div>
+
+        <div class="bid-controls">
+          <BidControls 
+            client:idle 
+            auctionId={auctionEvent.id}
+            bidStepSats={auction.bidStepSats}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</Root>

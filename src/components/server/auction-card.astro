@@ -1,0 +1,27 @@
+---
+import { BidHistory } from '../client/bid-history';
+import { DateTime } from 'luxon';
+import type { Auction } from '../../types/auction';
+
+interface Props {
+ id: string;
+ auction: Auction;
+}
+
+const { id, auction } = Astro.props;
+---
+
+<div class="auction-card" data-auction-id={id}>
+ <h3>{auction.title}</h3>
+ <p class="description">{auction.description}</p>
+ <p>Minimum bid step: {auction.bidStepSats} sats</p>
+ <p>Ends: {DateTime.fromSeconds(auction.finishTimestamp).toLocaleString(DateTime.DATETIME_FULL)}</p>
+
+ <BidHistory client:idle auctionId={id} />
+</div>
+
+<script define:vars={{ id }}>
+  document.querySelector(`[data-auction-id="${id}"]`)?.addEventListener('click', () => {
+    window.location.href = `/auction/${id}`;
+  });
+</script>

@@ -1,0 +1,36 @@
+---
+import AuctionCard from './auction-card.astro';
+import { getAuctions, initializeRelay } from '../../stores/server/auctions';
+
+// Server-side data fetching
+await initializeRelay();
+const auctions = getAuctions();
+
+// Sort and parse auctions on the server
+const parsedAuctions = auctions
+  .sort((a, b) => b.created_at - a.created_at)
+  .map((event) => {
+    try {
+      const auction = JSON.parse(event.content);
+      if (!auction) return null;
+      return {
+        id: event.id,
+        auction
+      };
+    } catch (error) {
+      console.error('Failed to parse auction:', error);
+      return null;
+    }
+  })
+  .filter(Boolean); // Remove null values
+---
+
+<div class="auctions-list">
+  {parsedAuctions.map(({ id, auction }) => (
+    <AuctionCard 
+      key={id}
+      id={id}
+      auction={auction}
+    />
+  ))}
+</div>
