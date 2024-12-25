@@ -5,34 +5,40 @@ import { BidControls } from '../../components/client/bid-controls';
 import { DateTime } from 'luxon';
 import { getAuctions, initializeRelay } from '../../stores/server/auctions';
 
-export async function getStaticPaths() {
-  try {
+export const prerender = false;
+
+// Default props for error state
+let auction = null;
+let auctionEvent = null;
+let error = null;
+
+try {
+  const { id } = Astro.params;
+  if (!id) {
+    error = 'No auction ID provided';
+  } else {
     await initializeRelay();
     const auctions = getAuctions();
-    
-    if (!auctions || auctions.length === 0) {
-      return []; // Return empty array if no auctions
-    }
+    auctionEvent = auctions.find(event => event.id === id);
 
-    return auctions.map(event => ({
-      params: { id: event.id },
-      props: { auctionEvent: event }
-    }));
-  } catch (error) {
-    console.error('Failed to get auctions:', error);
-    return []; // Return empty array on error
+    if (auctionEvent) {
+      try {
+        auction = JSON.parse(auctionEvent.content);
+      } catch (e) {
+        console.error('Failed to parse auction content:', e);
+        error = 'Invalid auction data';
+      }
+    } else {
+      error = 'Auction not found';
+    }
   }
+} catch (e) {
+  console.error('Error loading auction:', e);
+  error = 'Failed to load auction';
 }
 
-// Get data from props
-const { auctionEvent } = Astro.props;
-
-// Add error handling for parsing
-let auction;
-try {
-  auction = JSON.parse(auctionEvent.content);
-} catch (error) {
-  console.log('error', error);
+// Redirect if no valid auction found
+if (!auction || error) {
   return Astro.redirect('/404');
 }
 ---
@@ -49,18 +55,22 @@ try {
           <p>Ends: {DateTime.fromSeconds(auction.finishTimestamp).toLocaleString(DateTime.DATETIME_FULL)}</p>
         </div>
 
-        <div class="bids-section">
-          <h2>Bid History</h2>
-          <BidHistory client:idle auctionId={auctionEvent.id} />
-        </div>
-
-        <div class="bid-controls">
-          <BidControls 
-            client:idle 
-            auctionId={auctionEvent.id}
-            bidStepSats={auction.bidStepSats}
-          />
-        </div>
+        {auctionEvent && (
+          <>
+            <div class="bids-section">
+              <h2>Bid History</h2>
+              <BidHistory client:idle auctionId={auctionEvent.id} />
+            </div>
+            
+            <div class="bid-controls">
+              <BidControls 
+                client:idle 
+                auctionId={auctionEvent.id}
+                bidStepSats={auction.bidStepSats}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   </div>

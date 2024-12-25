@@ -11,8 +11,8 @@ const parsedAuctions = auctions
   .sort((a, b) => b.created_at - a.created_at)
   .map((event) => {
     try {
+      if (!event) return null;
       const auction = JSON.parse(event.content);
-      if (!auction) return null;
       return {
         id: event.id,
         auction
