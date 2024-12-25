@@ -1,2 +1,2 @@
 # bazar-client
-astro
+JustRelay client based on astro react framework.
