@@ -36,6 +36,7 @@ async function initializeStore() {
 }
 
 async function saveStore(state: AuctionsState) {
+  if (!state?.events?.length) return null;
   try {
     await fs.writeFile(STORE_FILE, JSON.stringify(state, null, 2), 'utf-8');
   } catch (error) {

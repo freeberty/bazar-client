@@ -16,7 +16,7 @@ export const CreateAuctionForm = () => {
   const { getInvoice } = usePayForEvent();
   const [paymentData, setPaymentData] = useState<string | null>(null);
   const [preparedEvent, setPreparedEvent] = useState<Event | null>(null);
-  const [auctionHash, setAuctionHash] = useState<string>('');
+  const [auctionId, setAuctionId] = useState<string>('');
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -29,18 +29,18 @@ export const CreateAuctionForm = () => {
     setMounted(true);
   }, []);
 
-  const generateHash = () => {
-    const hash = Math.random().toString(36).substring(2, 15);
-    setAuctionHash(hash);
+  const generateAuctionId = () => {
+    const randString = Math.random().toString(36).substring(2, 15);
+    setAuctionId(randString);
   };
 
   useEffect(() => {
-    generateHash();
+    generateAuctionId();
   }, []);
 
   const prepareAuction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!$userPubkey || !auctionHash) return;
+    if (!$userPubkey || !auctionId) return;
 
     const auction = {
       ...formData,
@@ -52,7 +52,7 @@ export const CreateAuctionForm = () => {
     const event: UnsignedEvent = {
       content: JSON.stringify(auction),
       kind: 33222,
-      tags: [["d", auctionHash]],
+      tags: [["d", auctionId]],
       created_at: DateTime.utc().toUnixInteger(),
       pubkey: $userPubkey,
     };
@@ -75,7 +75,7 @@ export const CreateAuctionForm = () => {
       
       // Add to user auctions store
       addUserAuction({
-        hash: auctionHash,
+        id: auctionId,
         title: formData.title,
         createdAt: DateTime.utc().toUnixInteger()
       });
@@ -90,7 +90,7 @@ export const CreateAuctionForm = () => {
       });
       setPaymentData(null);
       setPreparedEvent(null);
-      generateHash();
+      generateAuctionId();
     } catch (error) {
       alert('Failed to publish auction: ' + error);
     }
@@ -101,31 +101,31 @@ export const CreateAuctionForm = () => {
       <h2>Create New Auction</h2>
       <form onSubmit={prepareAuction}>
         <div className="form-group">
-          <label htmlFor="auctionHash">Auction Hash</label>
-          <div className="hash-input-group">
+          <label htmlFor="auctionId">Auction Id</label>
+          <div className="id-input-group">
             <input
-              id="auctionHash"
-              value={auctionHash}
-              onChange={(e) => setAuctionHash(e.target.value)}
+              id="auctionId"
+              value={auctionId}
+              onChange={(e) => setAuctionId(e.target.value)}
               required
             />
             <button 
               type="button"
-              onClick={generateHash}
-              className="generate-hash"
+              onClick={generateAuctionId}
+              className="generate-id"
             >
               Generate New
             </button>
           </div>
           {mounted && $userAuctions.auctions.length > 0 && (
             <select 
-              onChange={(e) => setAuctionHash(e.target.value)}
-              className="hash-select"
+              onChange={(e) => setAuctionId(e.target.value)}
+              className="id-select"
             >
-              <option value="">Select existing hash</option>
+              <option value="">Select existing auction</option>
               {$userAuctions.auctions.map(auction => (
-                <option key={auction.hash} value={auction.hash}>
-                  {auction.title} ({auction.hash})
+                <option key={auction.id} value={auction.id}>
+                  {auction.title} ({auction.id})
                 </option>
               ))}
             </select>
@@ -137,6 +137,7 @@ export const CreateAuctionForm = () => {
           <input
             id="title"
             value={formData.title}
+            placeholder="Weimar Artifacts"
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             required
           />
@@ -148,6 +149,7 @@ export const CreateAuctionForm = () => {
             id="description"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Short item description, please provide item photo urls here (from imgur for example) they will be parsed and shown as image on auction page"
           />
         </div>
 

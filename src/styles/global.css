@@ -188,18 +188,18 @@ button:hover {
   background: #0056b3;
 }
 
-.hash-input-group {
+.id-input-group {
   display: flex;
   gap: 1rem;
   margin-bottom: 0.5rem;
 }
 
-.generate-hash {
+.generate-id {
   white-space: nowrap;
   padding: 0.5rem 1rem;
 }
 
-.hash-select {
+.id-select {
   width: 100%;
   padding: 0.5rem;
   margin-top: 0.5rem;

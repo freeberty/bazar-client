@@ -1,7 +1,7 @@
 import { persistentAtom } from '@nanostores/persistent';
 
 interface UserAuction {
-  hash: string;
+  id: string;
   title: string;
   createdAt: number;
 }
@@ -21,7 +21,7 @@ export const userAuctionsStore = persistentAtom<UserAuctionsStore>(
 
 export function addUserAuction(auction: UserAuction) {
   const store = userAuctionsStore.get();
-  if (!store.auctions.some(a => a.hash === auction.hash)) {
+  if (!store.auctions.some(a => a.id === auction.id)) {
     userAuctionsStore.set({
       auctions: [...store.auctions, auction]
     });
