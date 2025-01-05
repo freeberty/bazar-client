@@ -1,23 +1,43 @@
 ---
-import { BidHistory } from '../client/bid-history';
+import { TopBid } from '../client/top-bid';
 import { DateTime } from 'luxon';
 import type { Auction } from '../../types/auction';
 
-interface Props {
- id: string;
- auction: Auction;
+function parseDescription(description: string): { imageUrl: string | null; cleanDescription: string } {
+  const imageRegex = /https?:\/\/[^\s<>"]+?\.(?:jpg|jpeg|png)(?:\?[^\s<>"]*)?/gi;
+  const matches = description.match(imageRegex);
+  const firstImage = matches ? matches[0] : null;
+  
+  const cleanDescription = description.replace(imageRegex, '').trim();
+  
+  return {
+    imageUrl: firstImage,
+    cleanDescription
+  };
 }
 
 const { id, auction } = Astro.props;
+const { imageUrl, cleanDescription } = parseDescription(auction.description);
 ---
 
 <div class="auction-card" data-auction-id={id}>
- <h3>{auction.title}</h3>
- <p class="description">{auction.description}</p>
- <p>Minimum bid step: {auction.bidStepSats} sats</p>
- <p>Ends: {DateTime.fromSeconds(auction.finishTimestamp).toLocaleString(DateTime.DATETIME_FULL)}</p>
-
- <BidHistory client:idle auctionId={id} />
+  <h3>{auction.title}</h3>
+  
+  {imageUrl && (
+    <div class="auction-image-container">
+      <img 
+        src={imageUrl} 
+        alt="Auction item"
+        class="auction-image"
+        loading="lazy"
+      />
+    </div>
+  )}
+  <div class="details">
+    <p class="description">{cleanDescription}</p>
+    <p>Ends: {DateTime.fromSeconds(auction.finishTimestamp).toLocaleString(DateTime.DATETIME_FULL)}</p>
+    <TopBid client:idle auctionId={id} />
+  </div>
 </div>
 
 <script define:vars={{ id }}>

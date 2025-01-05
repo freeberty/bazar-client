@@ -1,4 +1,3 @@
-// src/lib/nostr.ts
 import { Relay } from 'nostr-tools/relay'
 import type { Event, Filter } from 'nostr-tools'
 import { useCallback, useEffect, useState } from 'react'
